@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeDrop — Blood Donation & Tracking System</title>
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><i class="fa-solid fa-droplet"></i></div>
+      <div>
+        <h1>LifeDrop</h1>
+        <span>Blood Network</span>
+      </div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" data-view="dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</button>
+      <button class="nav-item" data-view="donors"><i class="fa-solid fa-users"></i> Donors <span class="badge" id="nav-donor-count">0</span></button>
+      <button class="nav-item" data-view="requests"><i class="fa-solid fa-hand-holding-droplet"></i> Requests <span class="badge alert" id="nav-request-count">0</span></button>
+      <button class="nav-item" data-view="inventory"><i class="fa-solid fa-warehouse"></i> Blood Inventory</button>
+      <button class="nav-item" data-view="compatibility"><i class="fa-solid fa-arrows-rotate"></i> Compatibility</button>
+    </nav>
+    <div class="sidebar-card">
+      <h4><i class="fa-solid fa-triangle-exclamation"></i> Emergency?</h4>
+      <p>Need blood urgently? Create a request and we’ll match donors instantly.</p>
+      <button class="btn btn-white" onclick="switchView('requests'); document.getElementById('openRequestModal').click()">New Emergency Request</button>
+    </div>
+    <div class="sidebar-footer">© 2026 LifeDrop • Save Lives</div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger"><i class="fa-solid fa-bars"></i></button>
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input id="globalSearch" type="text" placeholder="Search donors, blood group, location...">
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-outline" id="openDonorModal"><i class="fa-solid fa-user-plus"></i> Add Donor</button>
+        <button class="btn btn-primary" id="openRequestModal"><i class="fa-solid fa-plus"></i> New Request</button>
+        <div class="avatar">AD</div>
+      </div>
+    </header>
+
+    <!-- DASHBOARD -->
+    <section class="view active" id="view-dashboard">
+      <div class="page-title">
+        <h2>Dashboard Overview</h2>
+        <p>Real-time blood donation tracking and availability</p>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-icon red"><i class="fa-solid fa-users"></i></div><div><span>Total Donors</span><h3 id="stat-donors">0</h3><small id="stat-eligible">0 eligible now</small></div></div>
+        <div class="stat-card"><div class="stat-icon dark"><i class="fa-solid fa-droplet"></i></div><div><span>Blood Units Available</span><h3 id="stat-units">0</h3><small>Across 8 blood groups</small></div></div>
+        <div class="stat-card"><div class="stat-icon orange"><i class="fa-solid fa-clock"></i></div><div><span>Pending Requests</span><h3 id="stat-pending">0</h3><small id="stat-urgent">0 urgent</small></div></div>
+        <div class="stat-card"><div class="stat-icon green"><i class="fa-solid fa-heart-pulse"></i></div><div><span>Lives Impacted</span><h3 id="stat-lives">0</h3><small>Total donations × 3</small></div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head"><h3>Blood Stock Levels</h3><span class="pill">Units</span></div>
+          <div class="stock-grid" id="stockGrid"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Recent Requests</h3><button class="link" onclick="switchView('requests')">View all →</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Patient</th><th>Blood</th><th>Units</th><th>Status</th></tr></thead><tbody id="recentRequests"></tbody></table></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head"><h3>Donation Timeline</h3></div>
+          <div class="timeline" id="timeline"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Eligibility Alert</h3><span class="pill green">56+ days rule</span></div>
+          <div id="eligibleList" class="eligible-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DONORS -->
+    <section class="view" id="view-donors">
+      <div class="page-title row">
+        <div><h2>Donor Registry</h2><p id="donorSubtitle">Manage and track all registered donors</p></div>
+        <div class="filters">
+          <select id="filterBlood"><option value="">All Blood Groups</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+          <select id="filterEligible"><option value="">All Donors</option><option value="eligible">Eligible Only</option><option value="not">Not Eligible</option></select>
+        </div>
+      </div>
+      <div class="table-wrap card">
+        <table>
+          <thead><tr><th>Donor</th><th>Blood</th><th>Location</th><th>Last Donation</th><th>Status</th><th>Total</th><th></th></tr></thead>
+          <tbody id="donorTable"></tbody>
+        </table>
+        <div id="donorEmpty" class="empty hidden">No donors found. Add your first donor to get started.</div>
+      </div>
+    </section>
+
+    <!-- REQUESTS -->
+    <section class="view" id="view-requests">
+      <div class="page-title row">
+        <div><h2>Blood Requests</h2><p>Track patient requests and match donors</p></div>
+        <select id="filterRequestStatus"><option value="">All Status</option><option value="pending">Pending</option><option value="fulfilled">Fulfilled</option><option value="cancelled">Cancelled</option></select>
+      </div>
+      <div id="requestGrid" class="request-grid"></div>
+      <div id="requestEmpty" class="empty hidden">No requests yet.</div>
+    </section>
+
+    <!-- INVENTORY -->
+    <section class="view" id="view-inventory">
+      <div class="page-title"><h2>Blood Inventory</h2><p>Live stock overview — donation adds stock, fulfilled request deducts stock</p></div>
+      <div class="inventory-grid" id="inventoryGrid"></div>
+      <div class="card" style="margin-top:18px">
+        <div class="card-head"><h3>Inventory Log</h3></div>
+        <div class="table-wrap"><table><thead><tr><th>Date</th><th>Action</th><th>Blood Group</th><th>Units</th><th>Note</th></tr></thead><tbody id="inventoryLog"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- COMPATIBILITY -->
+    <section class="view" id="view-compatibility">
+      <div class="page-title"><h2>Blood Compatibility Guide</h2><p>Who can donate to whom — critical for emergency matching</p></div>
+      <div class="compat-grid">
+        <table class="compat-table">
+          <thead><tr><th>Blood Type</th><th>Can Donate To</th><th>Can Receive From</th></tr></thead>
+          <tbody>
+            <tr><td><span class="bg-pill">O-</span></td><td>All groups (Universal Donor)</td><td>O-</td></tr>
+            <tr><td><span class="bg-pill">O+</span></td><td>O+, A+, B+, AB+</td><td>O+, O-</td></tr>
+            <tr><td><span class="bg-pill">A-</span></td><td>A-, A+, AB-, AB+</td><td>A-, O-</td></tr>
+            <tr><td><span class="bg-pill">A+</span></td><td>A+, AB+</td><td>A+, A-, O+, O-</td></tr>
+            <tr><td><span class="bg-pill">B-</span></td><td>B-, B+, AB-, AB+</td><td>B-, O-</td></tr>
+            <tr><td><span class="bg-pill">B+</span></td><td>B+, AB+</td><td>B+, B-, O+, O-</td></tr>
+            <tr><td><span class="bg-pill">AB-</span></td><td>AB-, AB+</td><td>AB-, A-, B-, O-</td></tr>
+            <tr><td><span class="bg-pill">AB+</span></td><td>AB+ only</td><td>All groups (Universal Recipient)</td></tr>
+          </tbody>
+        </table>
+        <div class="card">
+          <h3>Quick Matcher</h3>
+          <p style="color:#6b7280;font-size:13px;margin:6px 0 12px">Select patient blood group to find compatible donors</p>
+          <select id="matcherSelect" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px">
+            <option value="">Select blood group</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+          </select>
+          <div id="matcherResult" style="margin-top:14px"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Donor Modal -->
+<div class="modal" id="donorModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Register New Donor</h3><button class="icon-btn" data-close="donorModal"><i class="fa-solid fa-xmark"></i></button></div>
+    <form id="donorForm">
+      <div class="form-grid">
+        <label>Full Name<input required name="name" placeholder="e.g. Aarav Sharma"></label>
+        <label>Age<input required name="age" type="number" min="18" max="65" placeholder="18-65"></label>
+        <label>Blood Group<select required name="bloodGroup"><option value="">Select</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></label>
+        <label>Phone<input required name="phone" placeholder="+91 98765 43210"></label>
+        <label>Location<input required name="location" placeholder="City / Area"></label>
+        <label>Last Donation Date<input name="lastDonation" type="date"></label>
+      </div>
+      <label style="margin-top:10px;display:block">Total Donations<input name="totalDonations" type="number" min="0" value="0"></label>
+      <div class="modal-actions"><button type="button" class="btn btn-ghost" data-close="donorModal">Cancel</button><button type="submit" class="btn btn-primary">Save Donor</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Request Modal -->
+<div class="modal" id="requestModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>New Blood Request</h3><button class="icon-btn" data-close="requestModal"><i class="fa-solid fa-xmark"></i></button></div>
+    <form id="requestForm">
+      <div class="form-grid">
+        <label>Patient Name<input required name="patientName" placeholder="Patient full name"></label>
+        <label>Blood Group Needed<select required name="bloodGroup"><option value="">Select</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></label>
+        <label>Units Required<input required name="units" type="number" min="1" max="10" value="1"></label>
+        <label>Urgency<select name="urgency"><option value="normal">Normal</option><option value="urgent">Urgent</option><option value="critical">Critical</option></select></label>
+        <label>Hospital<input required name="hospital" placeholder="Hospital name"></label>
+        <label>Contact Phone<input required name="contact" placeholder="Contact number"></label>
+      </div>
+      <div class="modal-actions"><button type="button" class="btn btn-ghost" data-close="requestModal">Cancel</button><button type="submit" class="btn btn-primary">Create Request</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Donate Modal -->
+<div class="modal" id="donateModal">
+  <div class="modal-box small">
+    <div class="modal-head"><h3>Record Donation</h3><button class="icon-btn" data-close="donateModal"><i class="fa-solid fa-xmark"></i></button></div>
+    <p id="donateText" style="color:#6b7280;font-size:14px"></p>
+    <div class="modal-actions"><button class="btn btn-ghost" data-close="donateModal">Cancel</button><button class="btn btn-primary" id="confirmDonate">Confirm Donation (+1 Unit)</button></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
